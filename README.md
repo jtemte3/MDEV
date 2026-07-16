@@ -1,4 +1,4 @@
-# Markdown Editor
+# MDEV (Markdown Viewer/Editor)
 
 A native desktop markdown editor and viewer built with Python and PyQt5.
 

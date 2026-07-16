@@ -1,0 +1,1 @@
+%APPDATA%\Python\Python313\Scripts\pyinstaller --onefile --windowed --add-data "settings.json;." --name="MDEV-v1.4" --icon MDEV-icon.ico --add-data "Mdev-icon.png;." mdev.py

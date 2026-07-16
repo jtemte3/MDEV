@@ -1,4 +1,4 @@
-# Welcome to Markdown Editor! 🎉
+# Welcome to MDEV! 🎉
 
 This is a **native desktop** markdown editor built with PyQt5.
 
