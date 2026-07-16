@@ -1,0 +1,19 @@
+{
+    "dark_mode": true,
+    "app_theme": "dark",
+    "editor_visible": true,
+    "preview_visible": true,
+    "window_width": 1920,
+    "window_height": 1009,
+    "window_x": 0,
+    "window_y": 23,
+    "splitter_sizes": [
+        756,
+        809
+    ],
+    "explorer_splitter_sizes": [
+        299,
+        1569
+    ],
+    "last_directory": "C:/Users/jtemt/Documents/Repos/MarkdownEditor"
+}
