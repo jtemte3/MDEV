@@ -125,6 +125,22 @@ class MarkdownPreview(QWebEngineView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.dark_mode = False
+        self._scroll_position = 0  # Store scroll position to restore on next update
+        self._restore_timer = QTimer(self)
+        self._restore_timer.setSingleShot(True)
+        self._restore_timer.timeout.connect(self._restore_scroll)
+        self.loadFinished.connect(self._on_load_finished)
+        # Monitor scroll position changes
+        self.page().runJavaScript(
+            '''
+            (function() {
+                window.addEventListener('scroll', function() {
+                    window._mdevScrollPosition = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+                });
+                window._mdevScrollPosition = 0;
+            })()
+            '''
+        )
         self.setHtml(self.get_default_html())
         
     def toggle_dark_mode(self):
@@ -320,6 +336,12 @@ class MarkdownPreview(QWebEngineView):
     
     def update_preview(self, markdown_text):
         """Update the preview with rendered markdown"""
+        # Read the current scroll position from JavaScript before updating
+        self.page().runJavaScript(
+            'window._mdevScrollPosition || 0',
+            self._update_scroll_position
+        )
+        
         if not markdown_text.strip():
             self.setHtml(self.get_default_html())
             return
@@ -346,6 +368,37 @@ class MarkdownPreview(QWebEngineView):
             full_html = self.get_light_theme_html(html_content)
         
         self.setHtml(full_html)
+    
+    def _on_load_finished(self, success):
+        """Called when the page finishes loading"""
+        if success:
+            # Re-inject scroll tracking script
+            self.page().runJavaScript(
+                '''
+                (function() {
+                    window.addEventListener('scroll', function() {
+                        window._mdevScrollPosition = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+                    });
+                    if (typeof window._mdevScrollPosition === 'undefined') {
+                        window._mdevScrollPosition = 0;
+                    }
+                })()
+                '''
+            )
+            # Delay restoration slightly to ensure page is fully rendered
+            self._restore_timer.start(50)
+    
+    def _restore_scroll(self):
+        """Restore the scroll position after a brief delay"""
+        if hasattr(self, '_scroll_position') and self._scroll_position > 0:
+            self.page().runJavaScript(
+                f'window.scrollTo(0, {self._scroll_position});'
+            )
+    
+    def _update_scroll_position(self, result):
+        """Update stored scroll position"""
+        if result is not None:
+            self._scroll_position = result
     
     def get_light_theme_html(self, content):
         """Return light themed HTML"""
@@ -528,8 +581,6 @@ class MarkdownPreview(QWebEngineView):
         </body>
         </html>
         """
-        
-        self.setHtml(full_html)
 
 
 class SettingsManager:
@@ -860,13 +911,13 @@ class MainWindow(QMainWindow):
         # New File action
         new_file_action = QAction('📄', self)
         new_file_action.setToolTip('Create a new file in the current directory')
-        new_file_action.triggered.connect(self.new_file_in_directory)
+        new_file_action.triggered.connect(self.on_toolbar_new_file)
         self.explorer_toolbar.addAction(new_file_action)
         
         # New Folder action
         new_folder_action = QAction('📁', self)
         new_folder_action.setToolTip('Create a new folder in the current directory')
-        new_folder_action.triggered.connect(self.new_folder_in_directory)
+        new_folder_action.triggered.connect(self.on_toolbar_new_folder)
         self.explorer_toolbar.addAction(new_folder_action)
         
         # Find Current File action
@@ -996,7 +1047,6 @@ class MainWindow(QMainWindow):
     def new_file_in_directory(self, target_directory=None):
         """Create a new file in the specified directory or current directory"""
         if target_directory is None:
-            # Use selected item's directory or current_directory
             target_directory = self.get_target_directory_for_new_item()
         
         if not target_directory:
@@ -1034,7 +1084,6 @@ class MainWindow(QMainWindow):
     def new_folder_in_directory(self, target_directory=None):
         """Create a new folder in the specified directory or current directory"""
         if target_directory is None:
-            # Use selected item's directory or current_directory
             target_directory = self.get_target_directory_for_new_item()
         
         if not target_directory:
@@ -1063,10 +1112,12 @@ class MainWindow(QMainWindow):
         if not self.current_directory:
             return None
         
-        # Get the currently selected index
-        selected_index = self.file_tree.currentIndex()
+        # Try to get the selected index - use selectedIndexes() for better reliability
+        # when the tree doesn't have focus (e.g., when clicking toolbar buttons)
+        selected_indexes = self.file_tree.selectedIndexes()
         
-        if selected_index.isValid():
+        if selected_indexes:
+            selected_index = selected_indexes[0]  # Use first selected column
             file_path = self.file_model.fileInfo(selected_index).absoluteFilePath()
             if file_path:
                 # If it's a directory, create inside it
@@ -1075,8 +1126,63 @@ class MainWindow(QMainWindow):
                 # If it's a file, create in its parent directory (sibling)
                 return os.path.dirname(file_path)
         
+        # Fallback to currentIndex if no selection
+        selected_index = self.file_tree.currentIndex()
+        if selected_index.isValid():
+            file_path = self.file_model.fileInfo(selected_index).absoluteFilePath()
+            if file_path:
+                if os.path.isdir(file_path):
+                    return file_path
+                return os.path.dirname(file_path)
+        
         # Fall back to current_directory (root)
         return self.current_directory
+    
+    def on_toolbar_new_file(self):
+        """Handler for toolbar New File button - calculates target directory like context menu"""
+        if not self.current_directory:
+            QMessageBox.information(self, 'No Directory Open', 'Please open a directory first using File → Open Directory')
+            return
+        
+        # Get current index (same logic as context menu)
+        index = self.file_tree.currentIndex()
+        if not index.isValid():
+            root_index = self.file_model.index(self.current_directory)
+            self.file_tree.setCurrentIndex(root_index)
+            index = root_index
+        
+        # Get the file path and determine if it's a directory
+        file_path = self.file_model.fileInfo(index).absoluteFilePath()
+        is_directory = os.path.isdir(file_path) if file_path else False
+        
+        # Calculate target directory (same logic as context menu lambda)
+        target_directory = file_path if is_directory else os.path.dirname(file_path) if file_path else self.current_directory
+        
+        # Call the new file method with calculated target
+        self.new_file_in_directory(target_directory)
+    
+    def on_toolbar_new_folder(self):
+        """Handler for toolbar New Folder button - calculates target directory like context menu"""
+        if not self.current_directory:
+            QMessageBox.information(self, 'No Directory Open', 'Please open a directory first using File → Open Directory')
+            return
+        
+        # Get current index (same logic as context menu)
+        index = self.file_tree.currentIndex()
+        if not index.isValid():
+            root_index = self.file_model.index(self.current_directory)
+            self.file_tree.setCurrentIndex(root_index)
+            index = root_index
+        
+        # Get the file path and determine if it's a directory
+        file_path = self.file_model.fileInfo(index).absoluteFilePath()
+        is_directory = os.path.isdir(file_path) if file_path else False
+        
+        # Calculate target directory (same logic as context menu lambda)
+        target_directory = file_path if is_directory else os.path.dirname(file_path) if file_path else self.current_directory
+        
+        # Call the new folder method with calculated target
+        self.new_folder_in_directory(target_directory)
     
     def show_context_menu(self, position):
         """Show context menu for the project explorer tree"""
@@ -1487,12 +1593,12 @@ class MainWindow(QMainWindow):
         
         new_file_action = QAction('New File in Directory', self)
         new_file_action.setShortcut('Ctrl+Shift+N')
-        new_file_action.triggered.connect(self.new_file_in_directory)
+        new_file_action.triggered.connect(self.on_toolbar_new_file)
         file_menu.addAction(new_file_action)
         
         new_folder_action = QAction('New Folder in Directory', self)
         new_folder_action.setShortcut('Ctrl+Shift+F')
-        new_folder_action.triggered.connect(self.new_folder_in_directory)
+        new_folder_action.triggered.connect(self.on_toolbar_new_folder)
         file_menu.addAction(new_folder_action)
         
         file_menu.addSeparator()
