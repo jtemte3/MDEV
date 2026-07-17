@@ -71,4 +71,4 @@ venv.bak/
 Thumbs.db
 
 # Markdown Editor specific (optional, adjust if you want to track local settings)
-# settings.json 
+settings.json 
