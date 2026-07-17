@@ -346,11 +346,22 @@ class MarkdownPreview(QWebEngineView):
             self.setHtml(self.get_default_html())
             return
         
-        # Convert markdown to HTML with extensions
+        # 1. Manually generate Pygments CSS with theme-specific style
+        from pygments.formatters import HtmlFormatter
+        
+        # Select style based on current theme
+        # 'monokai' is great for dark mode, 'github' is clean for light mode
+        pygments_style = 'monokai' if self.dark_mode else 'default'
+        
+        formatter = HtmlFormatter(style=pygments_style, cssclass='highlight', noclasses=False)
+        pygments_css = formatter.get_style_defs('.highlight')
+        css_injection = f"<style>{pygments_css}</style>"
+        
+        # 2. Convert markdown to HTML
         html_content = markdown.markdown(
             markdown_text,
             extensions=[
-                'fenced_code',      # Code blocks with ```
+                'fenced_code',      # Essential for rendering code blocks
                 'codehilite',       # Syntax highlighting for code
                 'tables',           # Tables
                 'toc',              # Table of contents
@@ -358,16 +369,27 @@ class MarkdownPreview(QWebEngineView):
                 'sane_lists',       # Better list handling
                 'attr_list',        # Attribute lists
                 'md_in_html',       # Markdown in HTML
-            ]
+            ],
+            extension_configs={
+                'codehilite': {
+                    'use_pygments': True,
+                    'noclasses': False,
+                    'css_class': 'highlight',
+                }
+            }
         )
         
-        # Choose theme based on dark_mode setting
+        # 3. Inject CSS at the top of the content
+        full_content = css_injection + html_content
+        
+        # 4. Choose theme based on dark_mode setting
         if self.dark_mode:
-            full_html = self.get_dark_theme_html(html_content)
+            full_html = self.get_dark_theme_html(full_content)
         else:
-            full_html = self.get_light_theme_html(html_content)
+            full_html = self.get_light_theme_html(full_content)
         
         self.setHtml(full_html)
+
     
     def _on_load_finished(self, success):
         """Called when the page finishes loading"""
@@ -426,13 +448,6 @@ class MarkdownPreview(QWebEngineView):
                 h2 {{ font-size: 1.5em; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }}
                 h3 {{ font-size: 1.25em; }}
                 p {{ margin-bottom: 16px; }}
-                code {{
-                    background-color: #f6f8fa;
-                    padding: 0.2em 0.4em;
-                    border-radius: 3px;
-                    font-size: 85%;
-                    color: #e83e8c;
-                }}
                 pre {{
                     background-color: #f6f8fa;
                     padding: 16px;
@@ -517,13 +532,6 @@ class MarkdownPreview(QWebEngineView):
                 h2 {{ font-size: 1.5em; border-bottom: 1px solid #404040; padding-bottom: 0.3em; }}
                 h3 {{ font-size: 1.25em; }}
                 p {{ margin-bottom: 16px; }}
-                code {{
-                    background-color: #2d2d2d;
-                    padding: 0.2em 0.4em;
-                    border-radius: 3px;
-                    font-size: 85%;
-                    color: #9cdcfe;
-                }}
                 pre {{
                     background-color: #2d2d2d;
                     padding: 16px;
