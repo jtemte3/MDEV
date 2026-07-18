@@ -21,7 +21,7 @@ from components.preview import MarkdownPreview
 from components.activity_bar import ActivityBar
 from components.explorer import ProjectExplorer
 from components.toolbar import EditorToolbar
-from components.view_toolbar import ViewToolbar
+from components.app_toolbar import AppToolbar
 from components.preview_toolbar import PreviewToolbar
 from components.menus import MenuBar
 from components.editor_context_menu import EditorContextMenu
@@ -50,7 +50,7 @@ class MainWindow(QMainWindow):
         self.activity_bar = ActivityBar(self)
         self.project_explorer = ProjectExplorer(self)
         self.toolbar = EditorToolbar(self)
-        self.view_toolbar = ViewToolbar(self)
+        self.app_toolbar = AppToolbar(self)
         self.preview_toolbar = PreviewToolbar(self)
         self.menu_bar = MenuBar(self)
         self.editor = MarkdownEditorTextEdit()
@@ -141,7 +141,7 @@ class MainWindow(QMainWindow):
         inner_layout.setSpacing(0)
 
         # Add view toolbar at the top
-        inner_layout.addWidget(self.view_toolbar)
+        inner_layout.addWidget(self.app_toolbar)
 
         # Create editor pane container with toolbar
         self.editor_pane = self._create_editor_pane()
@@ -212,8 +212,8 @@ class MainWindow(QMainWindow):
 
         self.editor_pane.setVisible(editor_visible)
         self.preview_pane.setVisible(preview_visible)
-        self.view_toolbar.sync_editor_state(editor_visible)
-        self.view_toolbar.sync_preview_state(preview_visible)
+        self.app_toolbar.sync_editor_state(editor_visible)
+        self.app_toolbar.sync_preview_state(preview_visible)
 
         # Apply window geometry
         window_width = self.settings.get('window_width', constants.DEFAULT_WINDOW_WIDTH)
@@ -348,7 +348,7 @@ class MainWindow(QMainWindow):
             self.splitter.setStyleSheet(styles.DARK_SPLITTER_STYLE)
             self.project_explorer.set_theme('dark')
             self.toolbar.set_theme('dark')
-            self.view_toolbar.set_theme('dark')
+            self.app_toolbar.set_theme('dark')
             self.preview_toolbar.set_theme('dark')
             self.menu_bar.set_theme('dark')
             self.status_bar.setStyleSheet(styles.DARK_STATUS_BAR_STYLE)
@@ -360,7 +360,7 @@ class MainWindow(QMainWindow):
             self.splitter.setStyleSheet(styles.LIGHT_SPLITTER_STYLE)
             self.project_explorer.set_theme('light')
             self.toolbar.set_theme('light')
-            self.view_toolbar.set_theme('light')
+            self.app_toolbar.set_theme('light')
             self.preview_toolbar.set_theme('light')
             self.menu_bar.set_theme('light')
             self.status_bar.setStyleSheet(styles.LIGHT_STATUS_BAR_STYLE)
@@ -395,11 +395,11 @@ class MainWindow(QMainWindow):
 
     def toggle_view_toolbar(self):
         """Toggle the view toolbar visibility."""
-        if self.view_toolbar.isVisible():
-            self.view_toolbar.hide()
+        if self.app_toolbar.isVisible():
+            self.app_toolbar.hide()
             self.status_bar.showMessage('View toolbar: Hidden')
         else:
-            self.view_toolbar.show()
+            self.app_toolbar.show()
             self.status_bar.showMessage('View toolbar: Visible')
 
     def toggle_dark_mode(self, dark_mode):
@@ -421,24 +421,24 @@ class MainWindow(QMainWindow):
     def toggle_editor_pane(self, editor_visible):
         """Toggle the editor pane visibility."""
         self.editor_pane.setVisible(editor_visible)
-        self.view_toolbar.sync_editor_state(editor_visible)
+        self.app_toolbar.sync_editor_state(editor_visible)
         self.status_bar.showMessage('Editor pane: ' + ('Visible' if editor_visible else 'Hidden'))
 
         if not editor_visible and not self.preview_pane.isVisible():
             self.preview_pane.setVisible(True)
-            self.view_toolbar.sync_preview_state(True)
+            self.app_toolbar.sync_preview_state(True)
 
         self._save_current_settings()
 
     def toggle_preview_pane(self, preview_visible):
         """Toggle the preview pane visibility."""
         self.preview_pane.setVisible(preview_visible)
-        self.view_toolbar.sync_preview_state(preview_visible)
+        self.app_toolbar.sync_preview_state(preview_visible)
         self.status_bar.showMessage('Preview pane: ' + ('Visible' if preview_visible else 'Hidden'))
 
         if not preview_visible and not self.editor_pane.isVisible():
             self.editor_pane.setVisible(True)
-            self.view_toolbar.sync_editor_state(True)
+            self.app_toolbar.sync_editor_state(True)
 
         self._save_current_settings()
 

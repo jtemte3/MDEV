@@ -11,20 +11,20 @@ import constants
 import styles
 
 
-class ViewToolbar(QToolBar):
-    """Toolbar with view control buttons."""
+class AppToolbar(QToolBar):
+    """Toolbar with app control buttons."""
 
     def __init__(self, parent=None):
-        super().__init__('View', parent)
+        super().__init__('App', parent)
         self.parent_window = parent
         self.setup_ui()
 
     def setup_ui(self):
-        """Setup the view toolbar UI."""
+        """Setup the app toolbar UI."""
         self.setMovable(False)
         self.setIconSize(QSize(20, 20))
         self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.setStyleSheet(styles.DARK_VIEW_TOOLBAR_STYLE)
+        self.setStyleSheet(styles.DARK_APP_TOOLBAR_STYLE)
 
         # Swap panes
         self.swap_panes_action = QAction('⇄ Swap', self)
@@ -95,8 +95,8 @@ class ViewToolbar(QToolBar):
     # ========================================================================
 
     def set_theme(self, theme):
-        """Apply theme to view toolbar."""
+        """Apply theme to app toolbar."""
         if theme == 'dark':
-            self.setStyleSheet(styles.DARK_VIEW_TOOLBAR_STYLE)
+            self.setStyleSheet(styles.DARK_APP_TOOLBAR_STYLE)
         else:
-            self.setStyleSheet(styles.LIGHT_VIEW_TOOLBAR_STYLE)
+            self.setStyleSheet(styles.LIGHT_APP_TOOLBAR_STYLE)

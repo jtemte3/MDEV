@@ -129,7 +129,7 @@ DARK_TOOLBAR_STYLE = """
     }
 """
 
-DARK_VIEW_TOOLBAR_STYLE = """
+DARK_APP_TOOLBAR_STYLE = """
     QToolBar {
         background-color: #2d2d30;
         border-bottom: 1px solid #444444;
@@ -151,7 +151,7 @@ DARK_VIEW_TOOLBAR_STYLE = """
     }
 """
 
-DARK_VIEW_TOOLBAR_COLLAPSE_BTN = """
+DARK_APP_TOOLBAR_COLLAPSE_BTN = """
     QPushButton {
         background: transparent;
         border: none;
@@ -377,7 +377,7 @@ LIGHT_TOOLBAR_STYLE = """
     }
 """
 
-LIGHT_VIEW_TOOLBAR_STYLE = """
+LIGHT_APP_TOOLBAR_STYLE = """
     QToolBar {
         background-color: #f8f8f8;
         border-bottom: 1px solid #e0e0e0;
@@ -399,7 +399,7 @@ LIGHT_VIEW_TOOLBAR_STYLE = """
     }
 """
 
-LIGHT_VIEW_TOOLBAR_COLLAPSE_BTN = """
+LIGHT_APP_TOOLBAR_COLLAPSE_BTN = """
     QPushButton {
         background: transparent;
         border: none;
