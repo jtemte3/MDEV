@@ -3,7 +3,7 @@ Markdown Editor Text Edit Component
 """
 
 from PyQt5.QtWidgets import QTextEdit
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from PyQt5.QtGui import QFont
 
 import constants
@@ -12,6 +12,12 @@ import styles
 
 class MarkdownEditorTextEdit(QTextEdit):
     """Custom text editor with markdown syntax highlighting and text insertion"""
+    
+    # Signal emitted when editor scroll position changes
+    scroll_position_changed = pyqtSignal(int)
+    
+    # Scroll change tolerance (pixels) - ignore small changes to prevent drift
+    SCROLL_TOLERANCE = 3
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -26,10 +32,85 @@ class MarkdownEditorTextEdit(QTextEdit):
         self.document().contentsChanged.connect(self.update_syntax_highlighting)
         self.selectionChanged.connect(self.update_syntax_highlighting)
         
+        # Track scroll synchronization state
+        self._is_syncing_scroll = False  # Flag to prevent infinite scroll sync loops
+        self._scroll_ratio = 0.0  # Current scroll ratio (0.0 to 1.0)
+        self._last_scroll_value = 0  # Track last scroll value for change detection
+        self._pending_sync_value = None  # Track expected scroll value after sync
+        
+        # Connect vertical scrollbar valueChanged signal
+        self.verticalScrollBar().valueChanged.connect(self._on_scroll_changed)
+        
     def update_syntax_highlighting(self):
         """Update syntax highlighting when text changes"""
         # This is a placeholder - full implementation would use Pygments
         pass
+    
+    def _on_scroll_changed(self, value):
+        """Handle scroll position changes in the editor"""
+        # If we're waiting for a sync to complete, check if we're close enough
+        if self._pending_sync_value is not None:
+            if abs(value - self._pending_sync_value) <= self.SCROLL_TOLERANCE:
+                # We've reached the target scroll position, clear pending sync
+                self._pending_sync_value = None
+                self._last_scroll_value = value
+                self._is_syncing_scroll = False
+            return
+        
+        if self._is_syncing_scroll:
+            return
+        
+        # Check if scroll position changed significantly (with tolerance)
+        if abs(value - self._last_scroll_value) < self.SCROLL_TOLERANCE:
+            return  # Ignore small changes to prevent drift
+        
+        self._last_scroll_value = value
+        
+        # Calculate scroll ratio
+        max_scroll = self.verticalScrollBar().maximum()
+        if max_scroll > 0:
+            self._scroll_ratio = value / max_scroll
+        else:
+            self._scroll_ratio = 0.0
+        
+        # Emit signal with scroll ratio (scaled to 0-1000 for precision)
+        self.scroll_position_changed.emit(int(self._scroll_ratio * 1000))
+    
+    def sync_scroll_from_preview(self, scroll_ratio_1000):
+        """
+        Synchronize editor scroll position based on preview scroll ratio.
+        
+        Args:
+            scroll_ratio_1000: Scroll ratio from preview (0-1000 scale)
+        """
+        if self._is_syncing_scroll:
+            return
+        
+        self._is_syncing_scroll = True
+        
+        # Convert ratio back to 0.0-1.0 range
+        ratio = scroll_ratio_1000 / 1000.0
+        self._scroll_ratio = ratio
+        
+        # Set editor scroll position based on ratio
+        max_scroll = self.verticalScrollBar().maximum()
+        new_value = int(ratio * max_scroll)
+        self.verticalScrollBar().setValue(new_value)
+        
+        # Set pending sync target so scrollbar handler knows to wait for this scroll
+        self._pending_sync_value = new_value
+        
+        # Reset the flag after a delay as a fallback (in case sync completes quickly)
+        QTimer.singleShot(100, self._reset_syncing_flag)
+    
+    def _reset_syncing_flag(self):
+        """Reset the syncing flag after scroll operation completes."""
+        self._is_syncing_scroll = False
+        self._pending_sync_value = None
+    
+    def get_scroll_ratio(self):
+        """Get the current scroll ratio (0.0 to 1.0)"""
+        return self._scroll_ratio
     
     def keyPressEvent(self, event):
         """Handle keyboard shortcuts"""

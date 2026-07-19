@@ -132,6 +132,9 @@ class MainWindow(QMainWindow):
         self.editor.customContextMenuRequested.connect(self.editor_context_menu.show)
         self.preview.setContextMenuPolicy(Qt.CustomContextMenu)
         self.preview.customContextMenuRequested.connect(self.preview_context_menu.show)
+        
+        # Connect scroll synchronization signals
+        self._setup_scroll_sync()
 
     def _create_inner_container(self):
         """Create the inner container with view toolbar and editor/preview splitter."""
@@ -296,6 +299,36 @@ class MainWindow(QMainWindow):
         """Update the markdown preview."""
         markdown_text = self.editor.toPlainText()
         self.preview.update_preview(markdown_text)
+
+    def _setup_scroll_sync(self):
+        """Set up synchronous scrolling between editor and preview panes."""
+        # Connect editor scroll changes to preview
+        self.editor.scroll_position_changed.connect(self._on_editor_scrolled)
+        
+        # Connect preview scroll changes to editor
+        self.preview.scroll_position_changed.connect(self._on_preview_scrolled)
+        
+        # Connect editor vertical scrollbar directly for real-time sync
+        self.editor.verticalScrollBar().valueChanged.connect(self._sync_preview_from_editor)
+    
+    def _on_editor_scrolled(self, scroll_ratio_1000):
+        """Handle editor scroll position changes - sync to preview."""
+        # Get current editor scroll info
+        max_scroll = self.editor.verticalScrollBar().maximum()
+        current_value = self.editor.verticalScrollBar().value()
+        
+        # Sync preview to match
+        self.preview.sync_scroll_from_editor(current_value, max_scroll)
+    
+    def _sync_preview_from_editor(self, scroll_value):
+        """Real-time sync of preview when editor scrollbar changes."""
+        max_scroll = self.editor.verticalScrollBar().maximum()
+        self.preview.sync_scroll_from_editor(scroll_value, max_scroll)
+    
+    def _on_preview_scrolled(self, scroll_ratio_1000):
+        """Handle preview scroll position changes - sync to editor."""
+        # Sync editor to match preview scroll ratio
+        self.editor.sync_scroll_from_preview(scroll_ratio_1000)
 
     def update_auto_save_status(self):
         """Update the auto-save status indicator."""
