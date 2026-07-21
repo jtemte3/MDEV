@@ -28,6 +28,8 @@ class MarkdownPreview(QWebEngineView):
         self._scroll_ratio = 0.0  # Current scroll ratio (0.0 to 1.0)
         self._last_scroll_y = 0  # Track last scroll position for change detection
         self._pending_sync_scroll_y = None  # Track expected scroll position after sync
+        self._scroll_ratio_to_restore = None  # Scroll ratio to restore after content update
+        self._is_updating_content = False  # Flag to prevent scroll sync during content updates
         self.loadFinished.connect(self._on_load_finished)
         
         # Set up scroll polling timer
@@ -54,6 +56,12 @@ class MarkdownPreview(QWebEngineView):
     
     def update_preview(self, markdown_text):
         """Update the preview with rendered markdown"""
+        # Save current scroll ratio before updating content to restore it after
+        self._scroll_ratio_to_restore = self._scroll_ratio
+        
+        # Set flag to prevent scroll sync during content update
+        self._is_updating_content = True
+        
         if not markdown_text.strip():
             self.setHtml(self.get_default_html())
             return
@@ -87,11 +95,35 @@ class MarkdownPreview(QWebEngineView):
         if success:
             # Get content height after load
             self._get_content_height()
+            
+            # Restore scroll position if we had one saved before content update
+            if self._scroll_ratio_to_restore is not None:
+                # Use a small delay to ensure content height is available
+                QTimer.singleShot(50, self._restore_scroll_position)
+    
+    def _restore_scroll_position(self):
+        """Restore the scroll position after content update."""
+        if self._scroll_ratio_to_restore is not None:
+            # Temporarily disable sync to prevent triggering editor scroll sync
+            self._is_syncing_scroll = True
+            self.set_scroll_ratio(self._scroll_ratio_to_restore)
+            self._scroll_ratio_to_restore = None
+            # Clear the content update flag
+            self._is_updating_content = False
+            # Reset flag after a brief delay
+            QTimer.singleShot(100, self._reset_syncing_flag)
+        else:
+            # Clear the content update flag even if no scroll ratio to restore
+            self._is_updating_content = False
     
     def _poll_scroll_position(self):
         """Poll the current scroll position and emit signal if changed."""
         # Don't poll if preview is not visible
         if not self.isVisible():
+            return
+        
+        # Don't poll during content updates to prevent scroll sync issues
+        if self._is_updating_content:
             return
         
         self.page().runJavaScript(

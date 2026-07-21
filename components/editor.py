@@ -8,6 +8,7 @@ from PyQt5.QtGui import QFont
 
 import constants
 import styles
+from utils.spell_checker import SpellCheckEngine, SpellCheckHighlighter
 
 
 class MarkdownEditorTextEdit(QTextEdit):
@@ -27,6 +28,10 @@ class MarkdownEditorTextEdit(QTextEdit):
         
         # Set up initial colors (dark theme by default)
         self.setStyleSheet(styles.DARK_EDITOR_STYLE)
+        
+        # Initialize spell checker
+        self.spell_engine = SpellCheckEngine(language='en')
+        self.spell_highlighter = SpellCheckHighlighter(self, self.spell_engine)
         
         # Connect signals
         self.document().contentsChanged.connect(self.update_syntax_highlighting)
@@ -73,7 +78,7 @@ class MarkdownEditorTextEdit(QTextEdit):
         else:
             self._scroll_ratio = 0.0
         
-        # Emit signal with scroll ratio (scaled to 0-1000 for precision)
+        # Emit signal with scroll ratio (scaled to 1000 for precision)
         self.scroll_position_changed.emit(int(self._scroll_ratio * 1000))
     
     def sync_scroll_from_preview(self, scroll_ratio_1000):
