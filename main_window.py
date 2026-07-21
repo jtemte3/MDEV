@@ -522,6 +522,8 @@ class MainWindow(QMainWindow):
             success, content, error = self.file_manager.open_file(file_path)
             if success:
                 self.current_directory = os.path.dirname(file_path)
+                self.file_manager._update_title(file_path)
+                self.file_manager._update_auto_save_status()
                 self._update_preview()
             else:
                 from PyQt5.QtWidgets import QMessageBox
