@@ -129,7 +129,7 @@ DARK_TOOLBAR_STYLE = """
     }
 """
 
-DARK_VIEW_TOOLBAR_STYLE = """
+DARK_APP_TOOLBAR_STYLE = """
     QToolBar {
         background-color: #2d2d30;
         border-bottom: 1px solid #444444;
@@ -151,7 +151,7 @@ DARK_VIEW_TOOLBAR_STYLE = """
     }
 """
 
-DARK_VIEW_TOOLBAR_COLLAPSE_BTN = """
+DARK_APP_TOOLBAR_COLLAPSE_BTN = """
     QPushButton {
         background: transparent;
         border: none;
@@ -377,7 +377,7 @@ LIGHT_TOOLBAR_STYLE = """
     }
 """
 
-LIGHT_VIEW_TOOLBAR_STYLE = """
+LIGHT_APP_TOOLBAR_STYLE = """
     QToolBar {
         background-color: #f8f8f8;
         border-bottom: 1px solid #e0e0e0;
@@ -399,7 +399,7 @@ LIGHT_VIEW_TOOLBAR_STYLE = """
     }
 """
 
-LIGHT_VIEW_TOOLBAR_COLLAPSE_BTN = """
+LIGHT_APP_TOOLBAR_COLLAPSE_BTN = """
     QPushButton {
         background: transparent;
         border: none;
@@ -499,7 +499,97 @@ LIGHT_CONTEXT_MENU_STYLE = """
 """
 
 # ============================================================================
+# Find/Replace Widget Styles
+# ============================================================================
+
+DARK_FIND_WIDGET_STYLE = """
+    QWidget {
+        background-color: #252526;
+        border-bottom: 1px solid #444444;
+    }
+    QLineEdit {
+        background-color: #3c3c3c;
+        color: #cccccc;
+        border: 1px solid #444444;
+        border-radius: 2px;
+        padding: 2px 6px;
+        selection-background-color: #264f78;
+    }
+    QLineEdit:focus {
+        border: 1px solid #007acc;
+    }
+    QPushButton {
+        background-color: transparent;
+        border: none;
+        color: #cccccc;
+        padding: 2px 6px;
+    }
+    QPushButton:hover {
+        background-color: #444444;
+    }
+    QToolButton {
+        background-color: transparent;
+        border: none;
+        color: #cccccc;
+        padding: 2px;
+    }
+    QToolButton:hover {
+        background-color: #444444;
+    }
+    QToolButton:checked {
+        background-color: #094771;
+    }
+    QLabel {
+        color: #cccccc;
+    }
+"""
+
+LIGHT_FIND_WIDGET_STYLE = """
+    QWidget {
+        background-color: #f8f8f8;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    QLineEdit {
+        background-color: #ffffff;
+        color: #333333;
+        border: 1px solid #cccccc;
+        border-radius: 2px;
+        padding: 2px 6px;
+        selection-background-color: #0078d4;
+    }
+    QLineEdit:focus {
+        border: 1px solid #007acc;
+    }
+    QPushButton {
+        background-color: transparent;
+        border: none;
+        color: #333333;
+        padding: 2px 6px;
+    }
+    QPushButton:hover {
+        background-color: #e0e0e0;
+    }
+    QToolButton {
+        background-color: transparent;
+        border: none;
+        color: #333333;
+        padding: 2px;
+    }
+    QToolButton:hover {
+        background-color: #e0e0e0;
+    }
+    QToolButton:checked {
+        background-color: #0078d4;
+    }
+    QLabel {
+        color: #333333;
+    }
+"""
+
+# ============================================================================
 # HTML Templates for Markdown Preview
+# ============================================================================
+
 # ============================================================================
 
 LIGHT_PREVIEW_CSS = """
