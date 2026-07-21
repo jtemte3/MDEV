@@ -29,14 +29,14 @@ class AppToolbar(QToolBar):
         # Undo
         self.undo_action = QAction('↶ Undo', self)
         self.undo_action.setToolTip('Undo (Ctrl+Z)')
-        self.undo_action.setShortcut('Ctrl+Z')
+
         self.undo_action.triggered.connect(self._on_undo)
         self.addAction(self.undo_action)
 
         # Redo
         self.redo_action = QAction('↷ Redo', self)
         self.redo_action.setToolTip('Redo (Ctrl+Y)')
-        self.redo_action.setShortcut('Ctrl+Y')
+
         self.redo_action.triggered.connect(self._on_redo)
         self.addAction(self.redo_action)
 
@@ -46,21 +46,21 @@ class AppToolbar(QToolBar):
         # Cut
         self.cut_action = QAction('Cut', self)
         self.cut_action.setToolTip('Cut (Ctrl+X)')
-        self.cut_action.setShortcut('Ctrl+X')
+
         self.cut_action.triggered.connect(self._on_cut)
         self.addAction(self.cut_action)
 
         # Copy
         self.copy_action = QAction('Copy', self)
         self.copy_action.setToolTip('Copy (Ctrl+C)')
-        self.copy_action.setShortcut('Ctrl+C')
+
         self.copy_action.triggered.connect(self._on_copy)
         self.addAction(self.copy_action)
 
         # Paste
         self.paste_action = QAction('Paste', self)
         self.paste_action.setToolTip('Paste (Ctrl+V)')
-        self.paste_action.setShortcut('Ctrl+V')
+
         self.paste_action.triggered.connect(self._on_paste)
         self.addAction(self.paste_action)
 

@@ -40,21 +40,21 @@ class EditorContextMenu:
         
         # Cut action
         cut_action = QAction('✂️ Cut', self.parent_window)
-        cut_action.setShortcut(constants.SHORTCUTS['cut'])
+
         cut_action.triggered.connect(self.on_cut)
         cut_action.setEnabled(self.parent_window.editor.textCursor().hasSelection())
         context_menu.addAction(cut_action)
         
         # Copy action
         copy_action = QAction('📋 Copy', self.parent_window)
-        copy_action.setShortcut(constants.SHORTCUTS['copy'])
+
         copy_action.triggered.connect(self.on_copy)
         copy_action.setEnabled(self.parent_window.editor.textCursor().hasSelection())
         context_menu.addAction(copy_action)
         
         # Paste action
         paste_action = QAction('📌 Paste', self.parent_window)
-        paste_action.setShortcut(constants.SHORTCUTS['paste'])
+
         paste_action.triggered.connect(self.on_paste)
         context_menu.addAction(paste_action)
         
@@ -62,7 +62,7 @@ class EditorContextMenu:
         
         # Select All action
         select_all_action = QAction('☑️ Select All', self.parent_window)
-        select_all_action.setShortcut('Ctrl+A')
+
         select_all_action.triggered.connect(self.on_select_all)
         context_menu.addAction(select_all_action)
         
