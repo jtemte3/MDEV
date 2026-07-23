@@ -405,6 +405,25 @@ class MainWindow(QMainWindow):
 
     def open_directory(self, directory):
         """Open a directory in the project explorer (called by components)."""
+
+        #close current editor document, saving any changes
+        # Handle unsaved changes if there's an active file
+        result = self.file_manager.handle_unsaved_changes(self, 'opening a new directory')
+
+        if result == 'save':
+            if not self.file_manager.save_file_as(self):
+                return
+        elif not result:
+            # User cancelled
+            return
+
+        # Clear the editor and preview panes
+        self.file_manager.create_new_file()
+        self.file_manager._update_title()
+        self.file_manager._update_auto_save_status()
+        self._update_preview()
+
+        # Now open the directory
         self.current_directory = directory
         self.project_explorer.set_root_path(directory)
         self.project_explorer.show()
