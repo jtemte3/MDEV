@@ -212,3 +212,12 @@ class MarkdownEditorTextEdit(QTextEdit):
             self.setStyleSheet(styles.DARK_EDITOR_STYLE)
         else:
             self.setStyleSheet(styles.LIGHT_EDITOR_STYLE)
+
+    def insertFromMimeData(self, source):
+        """
+        Override to strip all formatting and insert only plain text.
+        This handles all paste operations (Ctrl+V, right-click paste, menu paste, etc.)
+        """
+        if source is not None and source.hasText():
+            plain_text = source.text()
+            self.insertPlainText(plain_text)
