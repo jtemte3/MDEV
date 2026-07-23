@@ -556,6 +556,12 @@ class MainWindow(QMainWindow):
         """Handle window close event."""
         from PyQt5.QtWidgets import QMessageBox
 
+        # Stop spell check to prevent false unsaved changes
+        if hasattr(self.editor, 'spell_highlighter'):
+            self.editor.spell_highlighter._full_check_timer.stop()
+            self.editor.spell_highlighter._is_checking = False
+            self.editor.document().setModified(False)
+
         result = self.file_manager.handle_unsaved_changes(self, 'closing')
 
         if result == 'save':
