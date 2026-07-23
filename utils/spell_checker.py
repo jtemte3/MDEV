@@ -97,17 +97,11 @@ class SpellCheckHighlighter:
         self.spell_engine = spell_engine
         self._misspelled_words = {}  # position -> word mapping
         
-        # Immediate check timer for current block (fast)
-        self._check_timer = QTimer(editor)
-        self._check_timer.setSingleShot(True)
-        self._check_timer.timeout.connect(self._perform_incremental_spell_check)
-        self._check_delay = 300  # 300ms debounce for immediate feedback
-        
         # Full document check timer (slower, runs after inactivity)
         self._full_check_timer = QTimer(editor)
         self._full_check_timer.setSingleShot(True)
         self._full_check_timer.timeout.connect(self._perform_full_spell_check)
-        self._full_check_delay = 2000  # 2 seconds of inactivity
+        self._full_check_delay = 1500  # 2 seconds of inactivity
         
         self._is_checking = False  # Flag to prevent recursive spell checks
         
@@ -126,51 +120,23 @@ class SpellCheckHighlighter:
         if self._is_checking:
             return
         # Restart both timers
-        self._check_timer.stop()
-        self._check_timer.start(self._check_delay)
         self._full_check_timer.stop()
         self._full_check_timer.start(self._full_check_delay)
-    
-    def _perform_incremental_spell_check(self):
-        """Perform fast spell check only on the current block."""
-        if self._is_checking:
-            return
-        self._is_checking = True
-        
-        try:
-            document = self.editor.document()
-            cursor = self.editor.textCursor()
-            current_block = cursor.block()
-            
-            # Clear underlines only in the current block to preserve others
-            self._clear_block_underlines(current_block)
-            
-            # Check words in current block
-            text = current_block.text()
-            words = self._extract_words(text)
-            
-            for word, start_pos in words:
-                if self.spell_engine.is_misspelled(word):
-                    position = current_block.position() + start_pos
-                    length = len(word)
-                    self._misspelled_words[position] = word
-                    self._apply_highlight(document, position, length)
-        except Exception:
-            pass
-        finally:
-            self._is_checking = False
             
     def _perform_full_spell_check(self):
         """Perform comprehensive spell check on the entire document."""
         if self._is_checking:
             return
         self._is_checking = True
-        
+
+        document = self.editor.document()
+        # Block signals to prevent UI lag and recursive checks
+        document.blockSignals(True)
+        document.setUndoRedoEnabled(False)
+
+        # Save the current modified state BEFORE spell check
+        was_modified = document.isModified()
         try:
-            document = self.editor.document()
-            # Block signals to prevent UI lag and recursive checks
-            document.blockSignals(True)
-            
             # Clear all underlines
             self._remove_all_spell_underlines(document)
             
@@ -191,6 +157,9 @@ class SpellCheckHighlighter:
             pass
         finally:
             document.blockSignals(False)
+            document.setUndoRedoEnabled(True)
+            # Restore the original modified state (spell check shouldn't mark as modified)
+            document.setModified(was_modified)
             self._is_checking = False
     
     def _apply_highlight(self, document, position, length):
