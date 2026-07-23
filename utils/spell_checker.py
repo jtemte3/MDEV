@@ -101,7 +101,7 @@ class SpellCheckHighlighter:
         self._full_check_timer = QTimer(editor)
         self._full_check_timer.setSingleShot(True)
         self._full_check_timer.timeout.connect(self._perform_full_spell_check)
-        self._full_check_delay = 1500  # 2 seconds of inactivity
+        self._full_check_delay = 1500  # 1.5 seconds of inactivity
         
         self._is_checking = False  # Flag to prevent recursive spell checks
         
